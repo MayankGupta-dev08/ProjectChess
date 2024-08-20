@@ -23,12 +23,17 @@ public class GamePanel extends JPanel implements Runnable {
 
     Thread gameThread;  // Thread for the game
     ChessBoard chessBoard = new ChessBoard();   // Chess Board
-    int currentPieceColor = WHITE;
+    int currentPieceColor = WHITE;  // Current piece color
+    Mouse mouse = new Mouse();  // Mouse listener
 
     public GamePanel() {
         LOGGER.info("Creating Game Panel");
+        
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
+        addMouseMotionListener(mouse);
+        addMouseListener(mouse);
+
         setPieces();
         copyPieces(pieces, simPieces);
     }
