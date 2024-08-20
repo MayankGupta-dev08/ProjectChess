@@ -28,7 +28,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public GamePanel() {
         LOGGER.info("Creating Game Panel");
-        
+
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
         addMouseMotionListener(mouse);
