@@ -15,12 +15,14 @@ public class ChessApp {
         // Create a new ChessBoard
         JFrame window = new JFrame("Project Chess");
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        window.setVisible(true);
 
-        window.add(new GamePanel());
+        GamePanel gamePanel = new GamePanel();
+        window.add(gamePanel);
         window.pack();  // Resize the window to fit the panel
 
-        window.setVisible(true);
         window.setResizable(false); // Prevent resizing
         window.setLocationRelativeTo(null); // Center the window
+        gamePanel.launchGame();
     }
 }
