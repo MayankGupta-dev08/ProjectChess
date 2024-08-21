@@ -3,10 +3,10 @@ package dev.mayank.app;
 import java.awt.*;
 
 public class ChessBoard {
-    public static final int SQUARE_SIZE = 100;  // The size of each square on the chessBoard is 100x100 pixels
     private static final int MAX_ROWS = 8;
     private static final int MAX_COLS = 8;
-    private static final int HALF_SQUARE_SIZE = SQUARE_SIZE / 2;
+    public static final int SQUARE_SIZE = 100;  // The size of each square on the chessBoard is 100x100 pixels
+    public static final int HALF_SQUARE_SIZE = SQUARE_SIZE / 2;
 
     /**
      * Draw the chess board with light brown and dark brown squares

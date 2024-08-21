@@ -28,4 +28,16 @@ public class Mouse extends MouseAdapter {
         x = e.getX();
         y = e.getY();
     }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public boolean isPressed() {
+        return isPressed;
+    }
 }

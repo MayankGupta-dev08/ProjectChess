@@ -7,6 +7,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import static dev.mayank.app.ChessBoard.HALF_SQUARE_SIZE;
+import static dev.mayank.app.ChessBoard.SQUARE_SIZE;
+
 /**
  * Panel for the Chess Game
  */
@@ -23,8 +26,9 @@ public class GamePanel extends JPanel implements Runnable {
 
     Thread gameThread;  // Thread for the game
     ChessBoard chessBoard = new ChessBoard();   // Chess Board
-    int currentPieceColor = WHITE;  // Current piece color
+    int currentColor = WHITE;  // The color for which the piece is to be moved.
     Mouse mouse = new Mouse();  // Mouse listener
+    ChessPiece activePiece = null;  // Selected piece
 
     public GamePanel() {
         LOGGER.info("Creating Game Panel");
@@ -88,8 +92,41 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Update the game state. <br>
+     * 1. If the mouse button is pressed && a chess piece is not selected, then check if you could pick up a piece <br>
+     * 2. If the mouse button is pressed && a chess piece is selected, then check if you could move the piece <br>
+     */
     private void update() {
-        // TODO: Update the game state
+        /*If the mouse button is pressed*/
+        if (mouse.isPressed()) {
+            if (activePiece == null) {    // If no piece is selected
+                for (ChessPiece piece : simPieces) {
+                    if (piece.getColor() == currentColor && piece.getRow() == mouse.getY() / SQUARE_SIZE
+                            && piece.getCol() == mouse.getX() / SQUARE_SIZE) {  // select the piece for the current player
+                        activePiece = piece;
+                    }
+                }
+            } else { // If a player is holding the piece and may either move it to any valid position, capture an opponent piece or release the piece
+                simulateMove();
+            }
+        }
+
+        /*If the mouse button is released & a piece was selected*/
+        if (!mouse.isPressed() && activePiece != null) {
+            activePiece.updatePosition();
+            activePiece = null;
+        }
+    }
+
+    private void simulateMove() {
+        // If a piece is being held, then update its position
+        activePiece.setX(mouse.getX() - HALF_SQUARE_SIZE);    // subtracting half of the square size to keep the piece at the center of the mouse
+        activePiece.setY(mouse.getY() - HALF_SQUARE_SIZE);
+        activePiece.setRow(activePiece.calcRow(activePiece.getY()));
+        activePiece.setCol(activePiece.calcCol(activePiece.getX()));
+
+        // If the piece is released, then check if the move is valid
     }
 
     /**
@@ -104,8 +141,17 @@ public class GamePanel extends JPanel implements Runnable {
         chessBoard.drawBoard(g2d);
 
         // Draw the pieces
-        for (ChessPiece piece : pieces) {
-            piece.drawImage(g2d);
+        for (ChessPiece piece : simPieces) {
+            piece.drawPiece(g2d);
+        }
+
+        if (activePiece != null) {
+            g2d.setColor(Color.WHITE);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
+            g2d.fillRect(activePiece.getCol() * SQUARE_SIZE, activePiece.getRow() * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+
+            activePiece.drawPiece(g2d);
         }
     }
 
