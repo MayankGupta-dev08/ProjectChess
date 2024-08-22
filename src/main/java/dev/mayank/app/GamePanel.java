@@ -17,22 +17,23 @@ public class GamePanel extends JPanel implements Runnable {
     public static final int WHITE = 0;  // 0 for white pieces
     public static final int BLACK = 1;  // 1 for black pieces
 
-    private static final Logger LOGGER = Logger.getLogger(GamePanel.class.getName());
+    private static final int FPS = 60; // Frames per second
     private static final int WIDTH = 1100;  // Width of the panel
     private static final int HEIGHT = 800;  // Height of the panel
-    private static final ArrayList<ChessPiece> pieces = new ArrayList<>();  // List of chess pieces
-    private static final ArrayList<ChessPiece> simPieces = new ArrayList<>();  // List of simulated chess pieces
-    private static final int FPS = 60; // Frames per second
+    private static final Logger LOGGER = Logger.getLogger(GamePanel.class.getName());
+    private static final ArrayList<ChessPiece> pieces = new ArrayList<>();  // List of chess pieces for restoring state
+    public static final ArrayList<ChessPiece> simPieces = new ArrayList<>();  // List of simulated chess pieces
 
     Thread gameThread;  // Thread for the game
     ChessBoard chessBoard = new ChessBoard();   // Chess Board
     int currentColor = WHITE;  // The color for which the piece is to be moved.
     Mouse mouse = new Mouse();  // Mouse listener
     ChessPiece activePiece = null;  // Selected piece
+    boolean pieceCanMove = false;   // Flag to check if the piece can move
+    boolean isValidSquare = false;  // Flag to check if the square is valid
 
     public GamePanel() {
         LOGGER.info("Creating Game Panel");
-
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
         addMouseMotionListener(mouse);
@@ -43,11 +44,13 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void launchGame() {
+        LOGGER.info("Launching the game");
         gameThread = new Thread(this);
         gameThread.start();
     }
 
     public void setPieces() {
+        LOGGER.info("Setting the pieces");
         // Setting the white team
         GamePanel.pieces.add(new Pawn(6, 0, WHITE));
         GamePanel.pieces.add(new Pawn(6, 1, WHITE));
@@ -83,13 +86,12 @@ public class GamePanel extends JPanel implements Runnable {
         GamePanel.pieces.add(new Bishop(0, 5, BLACK));
         GamePanel.pieces.add(new Knight(0, 6, BLACK));
         GamePanel.pieces.add(new Rook(0, 7, BLACK));
+        LOGGER.info("Pieces set");
     }
 
     private void copyPieces(ArrayList<ChessPiece> source, ArrayList<ChessPiece> target) {
         target.clear();
-        for (ChessPiece chessPiece : source) {
-            target.add(chessPiece);
-        }
+        target.addAll(source);
     }
 
     /**
@@ -114,12 +116,24 @@ public class GamePanel extends JPanel implements Runnable {
 
         /*If the mouse button is released & a piece was selected*/
         if (!mouse.isPressed() && activePiece != null) {
-            activePiece.updatePosition();
-            activePiece = null;
+            if (isValidSquare) {    // move is confirmed
+                copyPieces(simPieces, pieces);  // update the actual pieces
+                activePiece.updatePosition();
+            } else {
+                copyPieces(pieces, simPieces);  // reset the simulated pieces
+                activePiece.resetPosition();
+                activePiece = null;
+            }
         }
     }
 
     private void simulateMove() {
+        pieceCanMove = false;
+        isValidSquare = false;
+
+        // Reset the pieces for each simulation, for restoring the removed piece during the simulation and not during the actual move
+        copyPieces(pieces, simPieces);
+
         // If a piece is being held, then update its position
         activePiece.setX(mouse.getX() - HALF_SQUARE_SIZE);    // subtracting half of the square size to keep the piece at the center of the mouse
         activePiece.setY(mouse.getY() - HALF_SQUARE_SIZE);
@@ -127,6 +141,15 @@ public class GamePanel extends JPanel implements Runnable {
         activePiece.setCol(activePiece.calcCol(activePiece.getX()));
 
         // If the piece is released, then check if the move is valid
+        if (activePiece.canMove(activePiece.getRow(), activePiece.getCol())) {
+            pieceCanMove = true;
+            isValidSquare = true;
+
+            // if the piece is hitting opponent's piece, then capture it
+            if (activePiece.hittingPiece != null) {
+                simPieces.remove(activePiece.hittingPiece);
+            }
+        }
     }
 
     /**
@@ -146,11 +169,12 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         if (activePiece != null) {
-            g2d.setColor(Color.WHITE);
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
-            g2d.fillRect(activePiece.getCol() * SQUARE_SIZE, activePiece.getRow() * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
-            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
-
+            if (pieceCanMove) {
+                g2d.setColor(Color.WHITE);
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
+                g2d.fillRect(activePiece.getCol() * SQUARE_SIZE, activePiece.getRow() * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+            }
             activePiece.drawPiece(g2d);
         }
     }
@@ -162,6 +186,7 @@ public class GamePanel extends JPanel implements Runnable {
      */
     @Override
     public void run() {
+        LOGGER.info("Running the game");
         double drawInterval = 1000_000_000.00 / FPS;
         double delta = 0;
         long lastTime = System.nanoTime();
@@ -174,7 +199,7 @@ public class GamePanel extends JPanel implements Runnable {
 
             if (delta >= 1) {
                 update();   // Update the game state
-                repaint();  // Repaint the panel
+                repaint();  // Repaint the panel using paintComponent()
                 delta--;
             }
         }
