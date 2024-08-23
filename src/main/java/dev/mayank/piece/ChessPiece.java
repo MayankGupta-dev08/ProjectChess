@@ -6,6 +6,7 @@ import dev.mayank.app.GamePanel;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Objects;
 
 import static dev.mayank.app.ChessBoard.MAX_COLS;
 import static dev.mayank.app.ChessBoard.MAX_ROWS;
@@ -13,11 +14,15 @@ import static dev.mayank.app.ChessBoard.MAX_ROWS;
 public abstract class ChessPiece {
     private final int color;  // 0 for white, 1 for black
     private BufferedImage image;
-    private int x, y;   // Actual x and y coordinates of the piece
-    private int row, col, prevRow, prevCol; // Row and column of the piece
-    public ChessPiece hittingPiece = null;  // The piece that is being hit by the current piece
+    private int x;   // Actual x coordinate of the piece
+    private int y;   // Actual y coordinate of the piece
+    private int row;    // Current row of the piece
+    private int col;    // Current column of the piece
+    private int prevRow;    // Previous row of the piece
+    private int prevCol;    // Previous column of the piece
+    private ChessPiece hittingPiece = null;  // The piece that is being hit by the current piece
 
-    public ChessPiece(int row, int col, int color) {
+    protected ChessPiece(int row, int col, int color) {
         this.row = row;
         this.col = col;
         this.color = color;
@@ -36,13 +41,13 @@ public abstract class ChessPiece {
     public abstract boolean canMove(int targetRow, int targetCol);
 
     public BufferedImage getImage(String imagePath) {
-        BufferedImage image = null;
+        BufferedImage pieceImage = null;
         try {
-            image = ImageIO.read(getClass().getResourceAsStream(imagePath + ".png"));
+            pieceImage = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream(imagePath + ".png")));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return image;
+        return pieceImage;
     }
 
     public void setImage(BufferedImage image) {
@@ -89,7 +94,7 @@ public abstract class ChessPiece {
         y = calcY(row);
     }
 
-    public boolean isWithinBoard(int targetRow, int targetCol) {
+    protected boolean isWithinBoard(int targetRow, int targetCol) {
         return targetRow >= 0 && targetRow < MAX_ROWS && targetCol >= 0 && targetCol < MAX_COLS;
     }
 
@@ -98,7 +103,7 @@ public abstract class ChessPiece {
      * @param targetCol The column to which the piece is to be moved
      * @return The piece that is being hit by the current piece null if no piece is being hit
      */
-    public ChessPiece getHittingPiece(int targetRow, int targetCol) {
+    private ChessPiece getHittingPiece(int targetRow, int targetCol) {
         for (ChessPiece piece : GamePanel.simPieces) {
             if (piece.getRow() == targetRow && piece.getCol() == targetCol && piece != this) {
                 return piece;
@@ -112,7 +117,7 @@ public abstract class ChessPiece {
      * @param targetCol The column to which the piece is to be moved
      * @return true if the piece can be moved to the target position, false otherwise
      */
-    public boolean isValidNextMove(int targetRow, int targetCol) {
+    protected boolean isValidNextMove(int targetRow, int targetCol) {
         this.hittingPiece = getHittingPiece(targetRow, targetCol);
         if (hittingPiece == null) { // No piece is being hit
             return true;
@@ -121,6 +126,35 @@ public abstract class ChessPiece {
                 return true;
             } else {
                 this.hittingPiece = null;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return true if there is a piece in the path of the current piece, false otherwise
+     */
+    protected boolean isPieceInPath(int targetRow, int targetCol) {
+        int rowDiff = targetRow - prevRow;
+        int colDiff = targetCol - prevCol;
+
+        if (rowDiff == 0) { // Moving horizontally
+            int step = colDiff > 0 ? 1 : -1;
+            for (int i = prevCol + step; i != targetCol; i += step) {
+                for (ChessPiece piece : GamePanel.simPieces) {
+                    if (piece.getRow() == targetRow && piece.getCol() == i) {
+                        return true;
+                    }
+                }
+            }
+        } else if (colDiff == 0) {  // Moving vertically
+            int step = rowDiff > 0 ? 1 : -1;
+            for (int i = prevRow + step; i != targetRow; i += step) {
+                for (ChessPiece piece : GamePanel.simPieces) {
+                    if (piece.getRow() == i && piece.getCol() == targetCol) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -166,23 +200,11 @@ public abstract class ChessPiece {
         return prevRow;
     }
 
-    public void setPrevRow(int prevRow) {
-        this.prevRow = prevRow;
-    }
-
     public int getPrevCol() {
         return prevCol;
     }
 
-    public void setPrevCol(int prevCol) {
-        this.prevCol = prevCol;
-    }
-
-    public int getPieceIndex() {
-        for (int i = 0; i < GamePanel.simPieces.size(); i++) {
-            if (GamePanel.simPieces.get(i) == this)
-                return i;
-        }
-        return -1;
+    public ChessPiece getHittingPiece() {
+        return hittingPiece;
     }
 }

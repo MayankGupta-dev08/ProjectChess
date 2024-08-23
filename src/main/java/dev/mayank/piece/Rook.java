@@ -13,4 +13,21 @@ public class Rook extends ChessPiece {
             this.setImage(getImage("/images/piece/b-rook"));
         }
     }
+
+    /**
+     * Rooks can move only horizontally or vertically, but not only at the same square. <br>
+     * So, either the row or the column should be the same as the previous row or column.
+     * But the rook cannot move diagonally or jump over other pieces.
+     */
+    @Override
+    public boolean canMove(int targetRow, int targetCol) {
+        if (isWithinBoard(targetRow, targetCol)) {
+            if ((targetRow == getPrevRow() && targetCol != getPrevCol()) || (targetRow != getPrevRow() && targetCol == getPrevCol())) {
+                if (isValidNextMove(targetRow, targetCol) && !isPieceInPath(targetRow, targetCol)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

@@ -146,8 +146,8 @@ public class GamePanel extends JPanel implements Runnable {
             isValidSquare = true;
 
             // if the piece is hitting opponent's piece, then capture it
-            if (activePiece.hittingPiece != null) {
-                simPieces.remove(activePiece.hittingPiece);
+            if (activePiece.getHittingPiece() != null) {
+                simPieces.remove(activePiece.getHittingPiece());
             }
         }
     }
