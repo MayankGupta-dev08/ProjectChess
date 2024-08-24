@@ -138,7 +138,7 @@ public abstract class ChessPiece {
     /**
      * @return true if there is a piece in the path of the current piece, false otherwise
      */
-    protected boolean isPieceInPath(int targetRow, int targetCol) {
+    protected boolean isPieceOnStraightPath(int targetRow, int targetCol) {
         int rowDiff = targetRow - prevRow;
         int colDiff = targetCol - prevCol;
 
@@ -156,6 +156,52 @@ public abstract class ChessPiece {
             for (int i = prevRow + step; i != targetRow; i += step) {
                 for (ChessPiece piece : GamePanel.simPieces) {
                     if (piece.getRow() == i && piece.getCol() == targetCol) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return true if there is a piece in the diagonal path of the current piece, false otherwise
+     */
+    protected boolean isPieceOnDiagonalPath(int targetRow, int targetCol) {
+        if (targetRow < prevRow) {  // Moving up
+            for (int c = prevCol + 1; c < targetCol; c++) { // Moving right
+                for (ChessPiece piece : GamePanel.simPieces) {
+                    int diff = Math.abs(c - prevCol);
+                    if (piece.getCol() == c && piece.getRow() == prevRow - diff) {
+                        hittingPiece = piece;
+                        return true;
+                    }
+                }
+            }
+            for (int c = prevCol - 1; c > targetCol; c--) { // Moving left
+                for (ChessPiece piece : GamePanel.simPieces) {
+                    int diff = Math.abs(c - prevCol);
+                    if (piece.getCol() == c && piece.getRow() == prevRow - diff) {
+                        hittingPiece = piece;
+                        return true;
+                    }
+                }
+            }
+        } else {  // Moving down
+            for (int c = prevCol + 1; c < targetCol; c++) { // Moving right
+                for (ChessPiece piece : GamePanel.simPieces) {
+                    int diff = Math.abs(c - prevCol);
+                    if (piece.getCol() == c && piece.getRow() == prevRow + diff) {
+                        hittingPiece = piece;
+                        return true;
+                    }
+                }
+            }
+            for (int c = prevCol - 1; c > targetCol; c--) { // Moving left
+                for (ChessPiece piece : GamePanel.simPieces) {
+                    int diff = Math.abs(c - prevCol);
+                    if (piece.getCol() == c && piece.getRow() == prevRow + diff) {
+                        hittingPiece = piece;
                         return true;
                     }
                 }

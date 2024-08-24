@@ -13,4 +13,16 @@ public class Bishop extends ChessPiece {
             this.setImage(getImage("/images/piece/b-bishop"));
         }
     }
+
+    @Override
+    public boolean canMove(int targetRow, int targetCol) {
+        if (isWithinBoard(targetRow, targetCol) && !isSameSquare(targetRow, targetCol)) {   // within board & different square
+            if (Math.abs(targetRow - getPrevRow()) == Math.abs(targetCol - getPrevCol())) {   // diagonal step
+                if (isValidNextMove(targetRow, targetCol) && !isPieceOnDiagonalPath(targetRow, targetCol)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
