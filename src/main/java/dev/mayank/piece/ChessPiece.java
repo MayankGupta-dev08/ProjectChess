@@ -21,6 +21,7 @@ public abstract class ChessPiece {
     private int prevRow;    // Previous row of the piece
     private int prevCol;    // Previous column of the piece
     private ChessPiece hittingPiece = null;  // The piece that is being hit by the current piece
+    private boolean isMoved = false;  // Flag to check if the piece has been moved
 
     protected ChessPiece(int row, int col, int color) {
         this.row = row;
@@ -82,6 +83,7 @@ public abstract class ChessPiece {
         y = calcY(row);
         prevRow = calcRow(y);
         prevCol = calcCol(x);
+        isMoved = true;
     }
 
     /**
@@ -94,10 +96,18 @@ public abstract class ChessPiece {
         y = calcY(row);
     }
 
+    /**
+     * @return true if the target position is within the board, false otherwise
+     */
     protected boolean isWithinBoard(int targetRow, int targetCol) {
         return targetRow >= 0 && targetRow < MAX_ROWS && targetCol >= 0 && targetCol < MAX_COLS;
     }
 
+    /**
+     * @param targetRow The row to which the piece is to be moved
+     * @param targetCol The column to which the piece is to be moved
+     * @return true if the target position is the same as the current position, false otherwise
+     */
     protected boolean isSameSquare(int targetRow, int targetCol) {
         return targetRow == prevRow && targetCol == prevCol;
     }
@@ -107,7 +117,7 @@ public abstract class ChessPiece {
      * @param targetCol The column to which the piece is to be moved
      * @return The piece that is being hit by the current piece null if no piece is being hit
      */
-    private ChessPiece getHittingPiece(int targetRow, int targetCol) {
+    protected ChessPiece getHittingPiece(int targetRow, int targetCol) {
         for (ChessPiece piece : GamePanel.simPieces) {
             if (piece.getRow() == targetRow && piece.getCol() == targetCol && piece != this) {
                 return piece;
@@ -246,15 +256,23 @@ public abstract class ChessPiece {
         return color;
     }
 
-    public int getPrevRow() {
+    protected int getPrevRow() {
         return prevRow;
     }
 
-    public int getPrevCol() {
+    protected int getPrevCol() {
         return prevCol;
     }
 
     public ChessPiece getHittingPiece() {
         return hittingPiece;
+    }
+
+    protected void setHittingPiece(ChessPiece hittingPiece) {
+        this.hittingPiece = hittingPiece;
+    }
+
+    protected boolean isMoved() {
+        return isMoved;
     }
 }
