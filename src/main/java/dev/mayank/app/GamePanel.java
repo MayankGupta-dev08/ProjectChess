@@ -16,21 +16,21 @@ import static dev.mayank.app.ChessBoard.SQUARE_SIZE;
 public class GamePanel extends JPanel implements Runnable {
     public static final int WHITE = 0;  // 0 for white pieces
     public static final int BLACK = 1;  // 1 for black pieces
+    public static final ArrayList<ChessPiece> simPieces = new ArrayList<>();  // List of simulated chess pieces (actual pieces)
 
     private static final int FPS = 60; // Frames per second
     private static final int WIDTH = 1100;  // Width of the panel
     private static final int HEIGHT = 800;  // Height of the panel
     private static final Logger LOGGER = Logger.getLogger(GamePanel.class.getName());
     private static final ArrayList<ChessPiece> pieces = new ArrayList<>();  // List of chess pieces for restoring state
-    public static final ArrayList<ChessPiece> simPieces = new ArrayList<>();  // List of simulated chess pieces
 
-    Thread gameThread;  // Thread for the game
-    ChessBoard chessBoard = new ChessBoard();   // Chess Board
-    int currentColor = WHITE;  // The color for which the piece is to be moved.
-    Mouse mouse = new Mouse();  // Mouse listener
-    ChessPiece activePiece = null;  // Selected piece
-    boolean pieceCanMove = false;   // Flag to check if the piece can move
-    boolean isValidSquare = false;  // Flag to check if the square is valid
+    private Thread gameThread;  // Thread for the game
+    private ChessBoard chessBoard = new ChessBoard();   // Chess Board
+    private int currentColor = WHITE;  // The color for which the piece is to be moved.
+    private Mouse mouse = new Mouse();  // Mouse listener
+    private ChessPiece activePiece = null;  // Selected piece
+    private boolean pieceCanMove = false;   // Flag to check if the piece can move
+    private boolean isValidSquare = false;  // Flag to check if the square is valid
 
     public GamePanel() {
         LOGGER.info("Creating Game Panel");
@@ -119,6 +119,8 @@ public class GamePanel extends JPanel implements Runnable {
             if (isValidSquare) {    // move is confirmed
                 copyPieces(simPieces, pieces);  // update the actual pieces
                 activePiece.updatePosition();
+                /* The current player's turn is over */
+                switchPlayer();
             } else {
                 copyPieces(pieces, simPieces);  // reset the simulated pieces
                 activePiece.resetPosition();
@@ -150,6 +152,14 @@ public class GamePanel extends JPanel implements Runnable {
                 simPieces.remove(activePiece.getHittingPiece());
             }
         }
+    }
+
+    /**
+     * Switch the player's turn
+     */
+    private void switchPlayer() {
+        currentColor = currentColor == WHITE ? BLACK : WHITE;
+        activePiece = null;
     }
 
     /**
