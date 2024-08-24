@@ -22,7 +22,7 @@ public class Rook extends ChessPiece {
     @Override
     public boolean canMove(int targetRow, int targetCol) {
         if (isWithinBoard(targetRow, targetCol)) {
-            if ((targetRow == getPrevRow() && targetCol != getPrevCol()) || (targetRow != getPrevRow() && targetCol == getPrevCol())) {
+            if ((targetRow == getPrevRow() || targetCol == getPrevCol()) && !isSameSquare(targetRow, targetCol)) {
                 if (isValidNextMove(targetRow, targetCol) && !isPieceInPath(targetRow, targetCol)) {
                     return true;
                 }

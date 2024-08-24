@@ -98,6 +98,10 @@ public abstract class ChessPiece {
         return targetRow >= 0 && targetRow < MAX_ROWS && targetCol >= 0 && targetCol < MAX_COLS;
     }
 
+    protected boolean isSameSquare(int targetRow, int targetCol) {
+        return targetRow == prevRow && targetCol == prevCol;
+    }
+
     /**
      * @param targetRow The row to which the piece is to be moved
      * @param targetCol The column to which the piece is to be moved
