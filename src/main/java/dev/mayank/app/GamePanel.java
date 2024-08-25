@@ -24,6 +24,8 @@ public class GamePanel extends JPanel implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(GamePanel.class.getName());
     private static final ArrayList<ChessPiece> pieces = new ArrayList<>();  // List of chess pieces for restoring state
 
+    public static ChessPiece castlingRook = null; // Rook for castling
+
     private Thread gameThread;  // Thread for the game
     private ChessBoard chessBoard = new ChessBoard();   // Chess Board
     private int currentColor = WHITE;  // The color for which the piece is to be moved.
@@ -119,8 +121,10 @@ public class GamePanel extends JPanel implements Runnable {
             if (isValidSquare) {    // move is confirmed
                 copyPieces(simPieces, pieces);  // update the actual pieces
                 activePiece.updatePosition();
-                /* The current player's turn is over */
-                switchPlayer();
+                if (castlingRook != null) {
+                    castlingRook.updatePosition();
+                }
+                switchPlayer(); /* The current player's turn is over */
             } else {
                 copyPieces(pieces, simPieces);  // reset the simulated pieces
                 activePiece.resetPosition();
@@ -135,6 +139,12 @@ public class GamePanel extends JPanel implements Runnable {
 
         // Reset the pieces for each simulation, for restoring the removed piece during the simulation and not during the actual move
         copyPieces(pieces, simPieces);
+
+        // Reset the castling rook's position
+        if (castlingRook != null) {
+            castlingRook.resetPosition();
+            castlingRook = null;
+        }
 
         // If a piece is being held, then update its position
         activePiece.setX(mouse.getX() - HALF_SQUARE_SIZE);    // subtracting half of the square size to keep the piece at the center of the mouse
@@ -151,6 +161,8 @@ public class GamePanel extends JPanel implements Runnable {
             if (activePiece.getHittingPiece() != null) {
                 simPieces.remove(activePiece.getHittingPiece());
             }
+
+            checkForCastling(); // simulating rook's position if castling
         }
     }
 
@@ -160,6 +172,17 @@ public class GamePanel extends JPanel implements Runnable {
     private void switchPlayer() {
         currentColor = currentColor == WHITE ? BLACK : WHITE;
         activePiece = null;
+    }
+
+    /**
+     * Check if the king is moving for castling, then move the rook to the correct position
+     */
+    private void checkForCastling() {
+        if (activePiece instanceof King && castlingRook != null) {
+            int col = castlingRook.getCol();    // either 0 or 7
+            castlingRook.setCol(col == 0 ? col + 3 : col - 2);
+            castlingRook.setX(castlingRook.calcX(castlingRook.getCol()));
+        }
     }
 
     /**

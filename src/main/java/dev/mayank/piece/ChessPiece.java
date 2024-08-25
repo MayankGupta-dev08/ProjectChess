@@ -153,19 +153,21 @@ public abstract class ChessPiece {
         int colDiff = targetCol - prevCol;
 
         if (rowDiff == 0) { // Moving horizontally
-            int step = colDiff > 0 ? 1 : -1;
+            int step = colDiff > 0 ? 1 : -1;    // -1 for the left, 1 for the right
             for (int i = prevCol + step; i != targetCol; i += step) {
                 for (ChessPiece piece : GamePanel.simPieces) {
                     if (piece.getRow() == targetRow && piece.getCol() == i) {
+                        hittingPiece = piece;
                         return true;
                     }
                 }
             }
         } else if (colDiff == 0) {  // Moving vertically
-            int step = rowDiff > 0 ? 1 : -1;
+            int step = rowDiff > 0 ? 1 : -1;    // -1 for the up, 1 for the down
             for (int i = prevRow + step; i != targetRow; i += step) {
                 for (ChessPiece piece : GamePanel.simPieces) {
                     if (piece.getRow() == i && piece.getCol() == targetCol) {
+                        hittingPiece = piece;
                         return true;
                     }
                 }
