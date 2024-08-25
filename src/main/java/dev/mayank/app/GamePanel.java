@@ -187,6 +187,16 @@ public class GamePanel extends JPanel implements Runnable {
             }
             activePiece.drawPiece(g2d);
         }
+
+        /* STATUS MESSAGE */
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Trebuchet MS", Font.CENTER_BASELINE, 30));
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        if ((currentColor == WHITE)) {
+            g2d.drawString(">> White's Turn", 840, 550);
+        } else {
+            g2d.drawString(">> Black's Turn", 840, 250);
+        }
     }
 
     /**
