@@ -4,6 +4,10 @@
 
 This project is a simple chess game made using vanilla Java. It can be played on a computer. It has a UI which allows users to interact with the game using mouse events. The game includes a fully functional chessboard and pieces, with the ability to move pieces according to the rules of chess.
 
+<p align="center">
+  <img src="img_1.png" width="40%" height="40%">
+</p>
+
 ## Features
 
 - **Graphical User Interface (GUI)**: The game features a graphical interface where users can see the chessboard and pieces.
@@ -25,7 +29,9 @@ This project is a simple chess game made using vanilla Java. It can be played on
     mvn exec:java -Dexec.mainClass="dev.mayank.app.ChessApp"
     ```
 
-![img.png](img.png)
+<p align="center">
+  <img src="img.png" width="60%" height="60%">
+</p>
 
 ## Code Structure
 
