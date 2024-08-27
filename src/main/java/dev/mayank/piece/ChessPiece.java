@@ -22,6 +22,7 @@ public abstract class ChessPiece {
     private int prevCol;    // Previous column of the piece
     private ChessPiece hittingPiece = null;  // The piece that is being hit by the current piece
     private boolean isMoved = false;  // Flag to check if the piece has been moved
+    private boolean isTwoStepsMove = false;  // Flag to check if the pawn has moved two steps
 
     protected ChessPiece(int row, int col, int color) {
         this.row = row;
@@ -79,6 +80,9 @@ public abstract class ChessPiece {
      * Correctly update the position of the piece
      */
     public void updatePosition() {
+        if (this instanceof Pawn) // for en passant
+            isTwoStepsMove = Math.abs(row - prevRow) == 2;
+
         x = calcX(col);
         y = calcY(row);
         prevRow = calcRow(y);
@@ -276,5 +280,13 @@ public abstract class ChessPiece {
 
     protected boolean isMoved() {
         return isMoved;
+    }
+
+    public boolean isTwoStepsMove() {
+        return isTwoStepsMove;
+    }
+
+    public void setTwoStepsMove(boolean twoStepsMove) {
+        isTwoStepsMove = twoStepsMove;
     }
 }

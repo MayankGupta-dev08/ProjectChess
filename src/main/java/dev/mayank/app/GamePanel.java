@@ -167,10 +167,25 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     /**
-     * Switch the player's turn
+     * Switch the player's turn -
+     * If the current player is white, then switch to black and vice versa. <br>
+     * Also, reset the twoStepMove for the pawns of the current player,
+     * since the two-step move is only valid for the next move. <br>
      */
     private void switchPlayer() {
-        currentColor = currentColor == WHITE ? BLACK : WHITE;
+        if (currentColor == WHITE) {
+            currentColor = BLACK;
+            for (ChessPiece piece : simPieces) {
+                if (piece instanceof Pawn && piece.getColor() == BLACK)
+                    piece.setTwoStepsMove(false);   // reset for black pawns, since white's turn is over
+            }
+        } else {
+            currentColor = WHITE;
+            for (ChessPiece piece : simPieces) {
+                if (piece instanceof Pawn && piece.getColor() == WHITE)
+                    piece.setTwoStepsMove(false);   // reset for white pawns, since black's turn is over
+            }
+        }
         activePiece = null;
     }
 

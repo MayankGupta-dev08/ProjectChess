@@ -23,11 +23,13 @@ public class Pawn extends ChessPiece {
             /* moving 2 steps in straight line, each pawn is allowed only for their 1st move */
             if (targetCol == getPrevCol() && (targetRow == getPrevRow() + moveValue * 2) && pieceBeingHit == null
                     && !isMoved() && !isPieceOnStraightPath(targetRow, targetCol)) {
+                this.setHittingPiece(null);
                 return true;
             }
 
             /* moving 1 step in straight line */
             if (targetCol == getPrevCol() && (targetRow == getPrevRow() + moveValue) && pieceBeingHit == null) {
+                this.setHittingPiece(null);
                 return true;
             }
 
@@ -36,6 +38,17 @@ public class Pawn extends ChessPiece {
                     && pieceBeingHit.getColor() != getColor()) {
                 this.setHittingPiece(pieceBeingHit);
                 return true;
+            }
+
+            /* en passant */
+            if (Math.abs(targetCol - getPrevCol()) == 1 && (targetRow == getPrevRow() + moveValue)) {
+                for (ChessPiece piece : GamePanel.simPieces) {
+                    if (piece instanceof Pawn && piece.getColor() != getColor() && piece.isTwoStepsMove()
+                            && piece.getRow() == getPrevRow() && piece.getCol() == targetCol) {
+                        this.setHittingPiece(piece);
+                        return true;
+                    }
+                }
             }
         }
         return false;
