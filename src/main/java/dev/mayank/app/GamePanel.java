@@ -18,13 +18,14 @@ public class GamePanel extends JPanel implements Runnable {
     public static final int BLACK = 1;  // 1 for black pieces
     public static final ArrayList<ChessPiece> simPieces = new ArrayList<>();  // List of simulated chess pieces (actual pieces)
 
+    public static ChessPiece castlingRook = null; // Rook for castling
+
     private static final int FPS = 60; // Frames per second
     private static final int WIDTH = 1100;  // Width of the panel
     private static final int HEIGHT = 800;  // Height of the panel
     private static final Logger LOGGER = Logger.getLogger(GamePanel.class.getName());
     private static final ArrayList<ChessPiece> pieces = new ArrayList<>();  // List of chess pieces for restoring state
-
-    public static ChessPiece castlingRook = null; // Rook for castling
+    private static ArrayList<ChessPiece> promotionPieces = new ArrayList<>(); // Promotion pieces for the pawn
 
     private Thread gameThread;  // Thread for the game
     private ChessBoard chessBoard = new ChessBoard();   // Chess Board
@@ -33,6 +34,7 @@ public class GamePanel extends JPanel implements Runnable {
     private ChessPiece activePiece = null;  // Selected piece
     private boolean pieceCanMove = false;   // Flag to check if the piece can move
     private boolean isValidSquare = false;  // Flag to check if the square is valid
+    private boolean promotePawn = false;  // Flag to check if the pawn is promoted
 
     public GamePanel() {
         LOGGER.info("Creating Game Panel");
@@ -88,7 +90,7 @@ public class GamePanel extends JPanel implements Runnable {
         GamePanel.pieces.add(new Bishop(0, 5, BLACK));
         GamePanel.pieces.add(new Knight(0, 6, BLACK));
         GamePanel.pieces.add(new Rook(0, 7, BLACK));
-        LOGGER.info("Pieces set");
+        LOGGER.info("Pieces set on the board");
     }
 
     private void copyPieces(ArrayList<ChessPiece> source, ArrayList<ChessPiece> target) {
@@ -102,33 +104,41 @@ public class GamePanel extends JPanel implements Runnable {
      * 2. If the mouse button is pressed && a chess piece is selected, then check if you could move the piece <br>
      */
     private void update() {
-        /*If the mouse button is pressed*/
-        if (mouse.isPressed()) {
-            if (activePiece == null) {    // If no piece is selected
-                for (ChessPiece piece : simPieces) {
-                    if (piece.getColor() == currentColor && piece.getRow() == mouse.getY() / SQUARE_SIZE
-                            && piece.getCol() == mouse.getX() / SQUARE_SIZE) {  // select the piece for the current player
-                        activePiece = piece;
+        if (promotePawn)
+            promotingPawn();
+        else {
+            /*If the mouse button is pressed*/
+            if (mouse.isPressed()) {
+                if (activePiece == null) {    // If no piece is selected
+                    for (ChessPiece piece : simPieces) {
+                        // select the piece for the current player
+                        if (piece.getColor() == currentColor && piece.getRow() == mouse.getY() / SQUARE_SIZE
+                                && piece.getCol() == mouse.getX() / SQUARE_SIZE)
+                            activePiece = piece;
                     }
+                } else { // If a player is holding the piece and may either move it to any valid position, capture an opponent piece or release the piece
+                    simulateMove();
                 }
-            } else { // If a player is holding the piece and may either move it to any valid position, capture an opponent piece or release the piece
-                simulateMove();
             }
-        }
 
-        /*If the mouse button is released & a piece was selected*/
-        if (!mouse.isPressed() && activePiece != null) {
-            if (isValidSquare) {    // move is confirmed
-                copyPieces(simPieces, pieces);  // update the actual pieces
-                activePiece.updatePosition();
-                if (castlingRook != null) {
-                    castlingRook.updatePosition();
+            /*If the mouse button is released & a piece was selected*/
+            if (!mouse.isPressed() && activePiece != null) {
+                if (isValidSquare) {    // move is confirmed
+                    copyPieces(simPieces, pieces);  // update the actual pieces
+                    activePiece.updatePosition();
+
+                    if (castlingRook != null)
+                        castlingRook.updatePosition(); // update the rook's position for castling
+
+                    if (canPawnPromote())
+                        promotePawn = true;
+                    else
+                        switchPlayer(); /* The current player's turn is over */
+                } else {
+                    copyPieces(pieces, simPieces);  // reset the simulated pieces
+                    activePiece.resetPosition();
+                    activePiece = null;
                 }
-                switchPlayer(); /* The current player's turn is over */
-            } else {
-                copyPieces(pieces, simPieces);  // reset the simulated pieces
-                activePiece.resetPosition();
-                activePiece = null;
             }
         }
     }
@@ -201,6 +211,50 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     /**
+     * Checks if the active pawn can be promoted or not,
+     * if yes, then prepares the promotionPieces list and return true, otherwise false. <br>
+     */
+    private boolean canPawnPromote() {
+        if (activePiece instanceof Pawn) {
+            if ((currentColor == WHITE && activePiece.getRow() == 0) || (currentColor == BLACK && activePiece.getRow() == 7)) {
+                promotionPieces.clear();
+                promotionPieces.add(new Queen(2, 9, currentColor));
+                promotionPieces.add(new Bishop(3, 9, currentColor));
+                promotionPieces.add(new Knight(4, 9, currentColor));
+                promotionPieces.add(new Rook(5, 9, currentColor));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Promoting the pawn, and switching the player for next turn.
+     */
+    private void promotingPawn() {
+        if (mouse.isPressed()) {
+            for (ChessPiece piece : promotionPieces) {
+                if (piece.getCol() == mouse.getX() / SQUARE_SIZE && piece.getRow() == mouse.getY() / SQUARE_SIZE) {
+                    if (piece instanceof Queen)
+                        simPieces.add(new Queen(activePiece.getRow(), activePiece.getCol(), currentColor));
+                    else if (piece instanceof Bishop)
+                        simPieces.add(new Bishop(activePiece.getRow(), activePiece.getCol(), currentColor));
+                    else if (piece instanceof Knight)
+                        simPieces.add(new Knight(activePiece.getRow(), activePiece.getCol(), currentColor));
+                    else if (piece instanceof Rook)
+                        simPieces.add(new Rook(activePiece.getRow(), activePiece.getCol(), currentColor));
+
+                    simPieces.remove(activePiece);  // remove the pawn which is being promoted
+                    copyPieces(simPieces, pieces);
+                    activePiece = null;
+                    promotePawn = false;
+                    switchPlayer();
+                }
+            }
+        }
+    }
+
+    /**
      * To draw the components on the panel.
      */
     @Override
@@ -223,17 +277,26 @@ public class GamePanel extends JPanel implements Runnable {
                 g2d.fillRect(activePiece.getCol() * SQUARE_SIZE, activePiece.getRow() * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
             }
-            activePiece.drawPiece(g2d);
+            activePiece.drawPiece(g2d); // Draw the selected piece, after drawing the board and other pieces
         }
 
         /* STATUS MESSAGE */
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Trebuchet MS", Font.CENTER_BASELINE, 30));
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        if ((currentColor == WHITE)) {
-            g2d.drawString(">> White's Turn", 840, 550);
+
+        /*Promoting Pawn Status Message and Pieces Option*/
+        if (promotePawn) {
+            g2d.drawString("~Promote Pawn~", 840, 150);
+            for (ChessPiece piece : promotionPieces) {
+                g2d.drawImage(piece.getImage(), piece.calcX(piece.getCol()), piece.calcY(piece.getRow()),
+                        SQUARE_SIZE, SQUARE_SIZE, null);
+            }
         } else {
-            g2d.drawString(">> Black's Turn", 840, 250);
+            if ((currentColor == WHITE))
+                g2d.drawString(">> White's Turn", 840, 550);
+            else
+                g2d.drawString(">> Black's Turn", 840, 250);
         }
     }
 
