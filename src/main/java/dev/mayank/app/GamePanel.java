@@ -215,15 +215,13 @@ public class GamePanel extends JPanel implements Runnable {
      * if yes, then prepares the promotionPieces list and return true, otherwise false. <br>
      */
     private boolean canPawnPromote() {
-        if (activePiece instanceof Pawn) {
-            if ((currentColor == WHITE && activePiece.getRow() == 0) || (currentColor == BLACK && activePiece.getRow() == 7)) {
-                promotionPieces.clear();
-                promotionPieces.add(new Queen(2, 9, currentColor));
-                promotionPieces.add(new Bishop(3, 9, currentColor));
-                promotionPieces.add(new Knight(4, 9, currentColor));
-                promotionPieces.add(new Rook(5, 9, currentColor));
-                return true;
-            }
+        if (activePiece instanceof Pawn && ((currentColor == WHITE && activePiece.getRow() == 0) || (currentColor == BLACK && activePiece.getRow() == 7))) {
+            promotionPieces.clear();
+            promotionPieces.add(new Queen(2, 9, currentColor));
+            promotionPieces.add(new Bishop(3, 9, currentColor));
+            promotionPieces.add(new Knight(4, 9, currentColor));
+            promotionPieces.add(new Rook(5, 9, currentColor));
+            return true;
         }
         return false;
     }
