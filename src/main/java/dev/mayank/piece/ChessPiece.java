@@ -148,16 +148,16 @@ public abstract class ChessPiece {
      */
     protected boolean isValidNextMove(int targetRow, int targetCol) {
         this.hittingPiece = getHittingPiece(targetRow, targetCol);
+
         if (hittingPiece == null) { // No piece is being hit
             return true;
-        } else {
-            if (hittingPiece.getColor() != this.color) {    // The piece could be captured
-                return true;
-            } else {
-                this.hittingPiece = null;
-            }
         }
-        return false;
+        if (hittingPiece.getColor() != this.color) {    // The piece could be captured
+            return true;
+        }
+
+        this.hittingPiece = null;   // hitting piece is of the same color, so it can't be hit
+        return false;   // move is not valid
     }
 
     /**

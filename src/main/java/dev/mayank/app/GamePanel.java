@@ -124,7 +124,7 @@ public class GamePanel extends JPanel implements Runnable {
     private void update() {
         if (promotePawn)
             promotingPawn();
-        else {
+        else if (!isGameOver) {
             /*If the mouse button is pressed*/
             if (mouse.isPressed()) {
                 if (activePiece == null) {    // If no piece is selected
@@ -145,19 +145,18 @@ public class GamePanel extends JPanel implements Runnable {
                     copyPieces(simPieces, pieces);  // update the actual pieces
                     activePiece.updatePosition();
 
-                    if (isKingInCheck()) {
-                        // check if king has a possible move, if not then checkmate
-                        isGameOver = true;
-                        LOGGER.info("Game Over");
-                    }
-
                     if (castlingRook != null)
                         castlingRook.updatePosition(); // update the rook's position for castling
 
-                    if (canPawnPromote())
-                        promotePawn = true;
-                    else
-                        switchPlayer(); /* The current player's turn is over */
+                    if (isKingInCheck() && isCheckMate()) {
+                        LOGGER.info("~~Game Over~~");
+                        isGameOver = true;
+                    } else {    // The game is still on!!
+                        if (canPawnPromote())
+                            promotePawn = true; // pawn can be promoted & after promotion switching of player will happen
+                        else
+                            switchingPlayer(); // The current player's turn is over
+                    }
                 } else {
                     copyPieces(pieces, simPieces);  // reset the simulated pieces
                     activePiece.resetPosition();
@@ -216,7 +215,7 @@ public class GamePanel extends JPanel implements Runnable {
      * Also, reset the twoStepMove for the pawns of the current player,
      * since the two-step move is only valid for the next move. <br>
      */
-    private void switchPlayer() {
+    private void switchingPlayer() {
         if (currentColor == WHITE) {
             currentColor = BLACK;
             for (ChessPiece piece : simPieces) {
@@ -340,10 +339,100 @@ public class GamePanel extends JPanel implements Runnable {
                     copyPieces(simPieces, pieces);
                     activePiece = null;
                     promotePawn = false;
-                    switchPlayer();
+                    switchingPlayer();  // switch the player for the next turn
                 }
             }
         }
+    }
+
+    /**
+     * The king is not in checkmate if:
+     * <ul>
+     *     <li> The king can move to a safe square which is not under attack </li>
+     *     <li> The king or ally piece could capture the checking piece </li>
+     *     <li> An ally piece could be placed to block the check. </li>
+     * </ul>
+     * Check if the opponent's king is in checkmate or not.
+     * If the king is in checkmate, then the game is over and the current player has won. <br>
+     */
+    private boolean isCheckMate() {
+        ChessPiece oppKing = getKing(true);
+        assert oppKing != null;
+        if (simulateKingMoves(oppKing)) // if opponent's king has any valid move, hence not a checkmate
+            return false;   // opponent's king has some move (capture by king also considered)
+
+        /* Checking if opponent could actually block the attack or capture it using any other piece than king to stay in the game */
+        int colDiff = Math.abs(oppKing.getCol() - checkPiece.getCol());
+        int rowDiff = Math.abs(oppKing.getRow() - checkPiece.getRow());
+
+        // Now, we need to consider the attacking path & check if any opponent's piece could block the attack or capture the attacking piece
+        if (colDiff == 0) { // vertical attack
+            int step = checkPiece.getRow() < oppKing.getRow() ? 1 : -1;    // 1 for downwards and -1 for upwards
+            for (int r = checkPiece.getRow(); r != oppKing.getRow(); r += step) {
+                for (ChessPiece piece : simPieces) {
+                    if (piece.getColor() != currentColor && piece != oppKing && piece.canMove(r, checkPiece.getCol()))
+                        return false;
+                }
+            }
+        } else if (rowDiff == 0) {  // horizontal attack
+            int step = checkPiece.getCol() < oppKing.getCol() ? 1 : -1;   // 1 for rightwards and -1 for leftwards
+            for (int c = checkPiece.getCol(); c != oppKing.getCol(); c += step) {
+                for (ChessPiece piece : simPieces) {
+                    if (piece.getColor() != currentColor && piece != oppKing && piece.canMove(checkPiece.getRow(), c))
+                        return false;
+                }
+            }
+        } else {    // diagonal attack
+            int rowStep = checkPiece.getRow() < oppKing.getRow() ? 1 : -1;  // 1 for downwards and -1 for upwards
+            int colStep = checkPiece.getCol() < oppKing.getCol() ? 1 : -1;  // 1 for rightwards and -1 for leftwards
+            for (int r = checkPiece.getRow(), c = checkPiece.getCol(); r != oppKing.getRow(); r += rowStep, c += colStep) {
+                for (ChessPiece piece : simPieces) {
+                    if (piece.getColor() != currentColor && piece != oppKing && piece.canMove(r, c))
+                        return false;
+                }
+            }
+        }
+
+        return true;    // opponent's king is in checkmate
+    }
+
+    /**
+     * Simulate the king's moves to check if the king has any move to make, such that it is not in check.
+     */
+    private boolean simulateKingMoves(ChessPiece king) {
+        if (checkIfKingStillHasAnyMove(king, -1, 0)) return true;   // up
+        if (checkIfKingStillHasAnyMove(king, -1, 1)) return true;   // up-right
+        if (checkIfKingStillHasAnyMove(king, 0, 1)) return true;    // right
+        if (checkIfKingStillHasAnyMove(king, 1, 1)) return true;    // down-right
+        if (checkIfKingStillHasAnyMove(king, 1, 0)) return true;    // down
+        if (checkIfKingStillHasAnyMove(king, -1, -1)) return true;  // down-left
+        if (checkIfKingStillHasAnyMove(king, 0, -1)) return true;   // left
+        if (checkIfKingStillHasAnyMove(king, -1, -1)) return true;  // up-left
+        return false;
+    }
+
+    /**
+     * Check if the king still has any move to make, such that it is not in check.
+     */
+    private boolean checkIfKingStillHasAnyMove(ChessPiece king, int rowPlus, int colPlus) {
+        boolean hasValidMove = false;
+
+        king.setRow(king.getRow() + rowPlus);
+        king.setCol(king.getCol() + colPlus);
+
+        /* Temporary updating the king's position and checking if safe position is available or not */
+        if (king.canMove(king.getRow(), king.getCol())) {
+            if (king.getHittingPiece() != null)  // hitting opponent's piece, which could be a safe move without a check
+                simPieces.remove(king.getHittingPiece());
+            if (!isIllegalForKing(king))  // no opponent's piece could reach at this king's position
+                hasValidMove = true;
+        }
+
+        /* Restoring the king's original state, which was before this method call */
+        king.resetPosition();
+        copyPieces(pieces, simPieces);
+
+        return hasValidMove;
     }
 
     /**
@@ -378,16 +467,21 @@ public class GamePanel extends JPanel implements Runnable {
 
         /* STATUS MESSAGE */
         g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Trebuchet MS", Font.CENTER_BASELINE, 30));
+        g2d.setFont(new Font("Trebuchet MS", Font.PLAIN, 30));
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        /*Promoting Pawn Status Message and Pieces Option*/
-        if (promotePawn) {
+        if (promotePawn) {  // Pawn promotion status message and pieces options
             g2d.drawString("~Promote Pawn~", 840, 150);
             for (ChessPiece piece : promotionPieces)
                 g2d.drawImage(piece.getImage(), piece.calcX(piece.getCol()), piece.calcY(piece.getRow()),
                         SQUARE_SIZE, SQUARE_SIZE, null);
-        } else {
+        } else if (isGameOver) {    // Game Over status message
+            String winner = currentColor == WHITE ? "White Wins!" : "Black Wins!";
+            g2d.setColor(Color.BLUE);
+            g2d.setFont(new Font("Trebuchet MS", Font.BOLD, 90));
+            g2d.drawString("~~Game Over~~", 60, 350);
+            g2d.drawString(winner, 150, 450);
+        } else {    // Player's turn status message
             if ((currentColor == WHITE)) {
                 g2d.drawString(">> White's Turn", 840, 550);
                 if (checkPiece != null && checkPiece.getColor() == BLACK) {
