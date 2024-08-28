@@ -161,7 +161,8 @@ public abstract class ChessPiece {
     }
 
     /**
-     * @return true if there is a piece in the path of the current piece, false otherwise
+     * @return true if there is a piece in the straight path (b/w current position & target position)
+     * of the current piece (excluding (targetRow, targetCol)), false otherwise and hittingPiece is set
      */
     protected boolean isPieceOnStraightPath(int targetRow, int targetCol) {
         int rowDiff = targetRow - prevRow;
@@ -192,7 +193,8 @@ public abstract class ChessPiece {
     }
 
     /**
-     * @return true if there is a piece in the diagonal path of the current piece, false otherwise
+     * @return true if there is a piece in the diagonal path (b/w current position & target position)
+     * of the current piece (excluding (targetRow, targetCol)), false otherwise and hittingPiece is set
      */
     protected boolean isPieceOnDiagonalPath(int targetRow, int targetCol) {
         if (targetRow < prevRow) {  // Moving up
