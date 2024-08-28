@@ -15,6 +15,10 @@ This project is a simple chess game made using vanilla Java. It can be played on
 - **Game Loop**: The game runs in a separate thread to ensure smooth rendering and updates.
 - **Piece Setup**: The game initializes with all chess pieces set up in their standard starting positions.
 - **Rendering**: The chessboard and pieces are drawn using Java's `Graphics2D` class.
+- **Check and Checkmate Detection**: The game can detect check and checkmate conditions.
+- **Pawn Promotion**: The game supports pawn promotion.
+- **Castling**: The game supports castling moves.
+- **Stalemate Detection**: The game can detect stalemate conditions.
 
 ## How to Run
 
@@ -30,7 +34,7 @@ This project is a simple chess game made using vanilla Java. It can be played on
     ```
 
 <p align="center">
-  <img src="img.png" width="60%" height="60%">
+  <img src="img_2.png" width="60%" height="60%">
 </p>
 
 ## Code Structure
@@ -39,9 +43,16 @@ This project is a simple chess game made using vanilla Java. It can be played on
 - **ChessBoard.java**: Handles the drawing of the chessboard.
 - **ChessPiece.java**: Represents individual chess pieces and their behaviors.
 - **Mouse.java**: Listen for mouse events to handle piece selection and movement.
+- **King.java**: Represents the King piece and its specific movements.
+- **Queen.java**: Represents the Queen piece and its specific movements.
+- **Bishop.java**: Represents the Bishop piece and its specific movements.
+- **Knight.java**: Represents the Knight piece and its specific movements.
+- **Rook.java**: Represents the Rook piece and its specific movements.
+- **Pawn.java**: Represents the Pawn piece and its specific movements.
 
 ## Future Enhancements
 
-- Implement game state updates to handle piece movements and game rules.
-- Add more detailed descriptions and comments in the code.
 - Improve the user interface with better graphics and animations.
+- Implement an AI opponent to play against.
+- Add sound effects for moves and captures.
+- Enhance the game with additional features like move history and undo functionality.
