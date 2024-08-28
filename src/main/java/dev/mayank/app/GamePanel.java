@@ -37,6 +37,7 @@ public class GamePanel extends JPanel implements Runnable {
     private boolean isValidSquare = false;  // Flag to check if the square is valid
     private boolean promotePawn = false;  // Flag to check if the pawn is promoted
     private boolean isGameOver = false;  // Flag to check if the game is over
+    private boolean isStalemate = false;  // Flag to check if the game is in stalemate
 
     /**
      * Constructor to create the Game Panel, activate Mouse and set the pieces on the board.
@@ -122,9 +123,9 @@ public class GamePanel extends JPanel implements Runnable {
      * 2. If the mouse button is pressed && a chess piece is selected, then check if you could move the piece <br>
      */
     private void update() {
-        if (promotePawn)
+        if (promotePawn) {  // Pawn promotion
             promotingPawn();
-        else if (!isGameOver) {
+        } else if (!isGameOver && !isStalemate) {   // The game is still on
             /*If the mouse button is pressed*/
             if (mouse.isPressed()) {
                 if (activePiece == null) {    // If no piece is selected
@@ -151,6 +152,9 @@ public class GamePanel extends JPanel implements Runnable {
                     if (isKingInCheck() && isCheckMate()) {
                         LOGGER.info("~~Game Over~~");
                         isGameOver = true;
+                    } else if (!isKingInCheck() && isStalemateCondition()) {
+                        LOGGER.info("Stalemate!");
+                        isStalemate = true;
                     } else {    // The game is still on!!
                         if (canPawnPromote())
                             promotePawn = true; // pawn can be promoted & after promotion switching of player will happen
@@ -435,6 +439,26 @@ public class GamePanel extends JPanel implements Runnable {
         return hasValidMove;
     }
 
+    private boolean isStalemateCondition() {
+        int totalPiecesInHand = 0;
+        int totalPiecesOfOpponent = 0;
+        for (ChessPiece piece : simPieces) {
+            if (piece.getColor() != currentColor) totalPiecesOfOpponent++;
+            if (piece.getColor() == currentColor) totalPiecesInHand++;
+        }
+
+
+        // If the opponent has only one piece left (king), and the king can't move to any safe position
+        if (totalPiecesOfOpponent == 1) {
+            if (totalPiecesInHand == 1) return true; // only two kings are left on the board
+
+            ChessPiece opponentKing = getKing(true);
+            assert opponentKing != null;
+            if (!simulateKingMoves(opponentKing)) return true;
+        }
+        return false;
+    }
+
     /**
      * To draw the components on the panel.
      */
@@ -481,6 +505,10 @@ public class GamePanel extends JPanel implements Runnable {
             g2d.setFont(new Font("Trebuchet MS", Font.BOLD, 90));
             g2d.drawString("~~Game Over~~", 60, 350);
             g2d.drawString(winner, 150, 450);
+        } else if (isStalemate) {    // Stalemate status message
+            g2d.setColor(Color.DARK_GRAY);
+            g2d.setFont(new Font("Trebuchet MS", Font.TRUETYPE_FONT, 90));
+            g2d.drawString("~~Stalemate~~", 100, 425);
         } else {    // Player's turn status message
             if ((currentColor == WHITE)) {
                 g2d.drawString(">> White's Turn", 840, 550);
