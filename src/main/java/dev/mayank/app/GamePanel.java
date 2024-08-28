@@ -143,6 +143,10 @@ public class GamePanel extends JPanel implements Runnable {
         }
     }
 
+    /**
+     * Simulate the move of the piece, and check if the move is valid or not. <br>
+     * If the move is valid, then update the simulated pieces list, otherwise reset the piece's position.
+     */
     private void simulateMove() {
         pieceCanMove = false;
         isValidSquare = false;
@@ -173,6 +177,12 @@ public class GamePanel extends JPanel implements Runnable {
             }
 
             checkForCastling(); // simulating rook's position if castling
+
+            // Check if the king can move to the target position, such that no other opponent piece can hit the king
+            if (activePiece instanceof King && isIllegalForKing(activePiece)) {
+                isValidSquare = false;
+                pieceCanMove = false;
+            }
         }
     }
 
@@ -208,6 +218,17 @@ public class GamePanel extends JPanel implements Runnable {
             castlingRook.setCol(col == 0 ? col + 3 : col - 2);
             castlingRook.setX(castlingRook.calcX(castlingRook.getCol()));
         }
+    }
+
+    /**
+     * Checks if the move is illegal for king or not by checking if any of the opponent's piece could reach at king's (row,col)
+     */
+    private boolean isIllegalForKing(ChessPiece king) {
+        for (ChessPiece piece : simPieces) {
+            if (piece.getColor() != king.getColor() && piece.canMove(king.getRow(), king.getCol()))
+                return true;
+        }
+        return false;
     }
 
     /**
@@ -269,12 +290,16 @@ public class GamePanel extends JPanel implements Runnable {
         }
 
         if (activePiece != null) {
-            if (pieceCanMove) {
-                g2d.setColor(Color.WHITE);
-                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
-                g2d.fillRect(activePiece.getCol() * SQUARE_SIZE, activePiece.getRow() * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
-                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+            if (activePiece.isSameSquare()) {
+                g2d.setColor(Color.LIGHT_GRAY);
+            } else if (pieceCanMove || isValidSquare)
+                g2d.setColor(Color.GREEN);
+            else {
+                g2d.setColor(Color.RED);
             }
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f));
+            g2d.fillRect(activePiece.getCol() * SQUARE_SIZE, activePiece.getRow() * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
             activePiece.drawPiece(g2d); // Draw the selected piece, after drawing the board and other pieces
         }
 

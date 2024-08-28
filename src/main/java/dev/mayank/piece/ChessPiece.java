@@ -121,6 +121,13 @@ public abstract class ChessPiece {
     }
 
     /**
+     * @return true if the target position is the same as the current position, false otherwise
+     */
+    public boolean isSameSquare() {
+        return isSameSquare(row, col);
+    }
+
+    /**
      * @param targetRow The row to which the piece is to be moved
      * @param targetCol The column to which the piece is to be moved
      * @return The piece that is being hit by the current piece null if no piece is being hit
