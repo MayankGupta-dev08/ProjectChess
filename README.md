@@ -34,7 +34,7 @@ This project is a simple chess game made using vanilla Java. It can be played on
     ```
 
 <p align="center">
-  <img src="img_2.png" width="60%" height="60%">
+  <img src="img_2.png" width="80%" height="80%">
 </p>
 
 ## Code Structure
