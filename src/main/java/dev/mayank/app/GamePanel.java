@@ -45,6 +45,7 @@ public class GamePanel extends JPanel implements Runnable {
         LOGGER.info("Creating Game Panel");
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.BLACK);
+
         addMouseMotionListener(mouse);
         addMouseListener(mouse);
 
@@ -199,13 +200,13 @@ public class GamePanel extends JPanel implements Runnable {
                 simPieces.remove(activePiece.getHittingPiece());
             }
 
-            checkForCastling(); // simulating rook's position if castling
-
             // Check if the king can move to the target position, such that no other opponent piece can hit the king
-            if (activePiece instanceof King && isIllegalForKing(activePiece)) {
+            if (canOpponentCaptureKing() || (activePiece instanceof King && isIllegalForKing(activePiece))) {
                 isValidSquare = false;
                 pieceCanMove = false;
             }
+
+            checkForCastling(); // simulating rook's position if castling
         }
     }
 
@@ -231,7 +232,6 @@ public class GamePanel extends JPanel implements Runnable {
         }
         activePiece = null;
     }
-
 
     /**
      * Checks if the opponent's King is in check by the active piece and sets checkPiece if checking.
@@ -289,6 +289,19 @@ public class GamePanel extends JPanel implements Runnable {
                 return true;
         }
         return false;
+    }
+
+    /**
+     * Checks if any opponent player's piece could possibly capture the current player's King. <br>
+     * This forces the current player to either block the King or move it to a safe position, or capture the opponent's piece.
+     *
+     * @return true, if yes, otherwise false.
+     */
+    private boolean canOpponentCaptureKing() {
+        ChessPiece currKing = getKing(false);
+        assert currKing != null;
+        // Check if the opponent's piece can capture the current player's king
+        return isIllegalForKing(currKing);
     }
 
     /**
