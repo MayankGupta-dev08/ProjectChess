@@ -32,10 +32,15 @@ public class GamePanel extends JPanel implements Runnable {
     private int currentColor = WHITE;  // The color for which the piece is to be moved.
     private Mouse mouse = new Mouse();  // Mouse listener
     private ChessPiece activePiece = null;  // Selected piece
+    private ChessPiece checkPiece = null;   // piece which is giving check to the king
     private boolean pieceCanMove = false;   // Flag to check if the piece can move
     private boolean isValidSquare = false;  // Flag to check if the square is valid
     private boolean promotePawn = false;  // Flag to check if the pawn is promoted
+    private boolean isGameOver = false;  // Flag to check if the game is over
 
+    /**
+     * Constructor to create the Game Panel, activate Mouse and set the pieces on the board.
+     */
     public GamePanel() {
         LOGGER.info("Creating Game Panel");
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -47,12 +52,18 @@ public class GamePanel extends JPanel implements Runnable {
         copyPieces(pieces, simPieces);
     }
 
+    /**
+     * Launch the game by starting the game thread.
+     */
     public void launchGame() {
         LOGGER.info("Launching the game");
         gameThread = new Thread(this);
         gameThread.start();
     }
 
+    /**
+     * Set the pieces on the board.
+     */
     public void setPieces() {
         LOGGER.info("Setting the pieces");
         // Setting the white team
@@ -93,6 +104,12 @@ public class GamePanel extends JPanel implements Runnable {
         LOGGER.info("Pieces set on the board");
     }
 
+    /**
+     * Copy the pieces from the source list to the target list.
+     *
+     * @param source The source list from which the pieces are to be copied
+     * @param target The target list to which the pieces are to be copied
+     */
     private void copyPieces(ArrayList<ChessPiece> source, ArrayList<ChessPiece> target) {
         target.clear();
         target.addAll(source);
@@ -126,6 +143,12 @@ public class GamePanel extends JPanel implements Runnable {
                 if (isValidSquare) {    // move is confirmed
                     copyPieces(simPieces, pieces);  // update the actual pieces
                     activePiece.updatePosition();
+
+                    if (isKingInCheck()) {
+                        // check if king has a possible move, if not then checkmate
+                        isGameOver = true;
+                        LOGGER.info("Game Over");
+                    }
 
                     if (castlingRook != null)
                         castlingRook.updatePosition(); // update the rook's position for castling
@@ -207,6 +230,43 @@ public class GamePanel extends JPanel implements Runnable {
             }
         }
         activePiece = null;
+    }
+
+
+    /**
+     * Checks if the opponent's King is in check by the active piece and sets checkPiece if checking.
+     *
+     * @return true if the opponent's King is in check, false otherwise.
+     */
+    private boolean isKingInCheck() {
+        ChessPiece opponentKing = getKing(true);
+        assert opponentKing != null;
+        if (activePiece.canMove(opponentKing.getRow(), opponentKing.getCol())) {
+            checkPiece = activePiece;
+            return true;
+        }
+
+        checkPiece = null;
+        return false;
+    }
+
+    /**
+     * Retrieves the King piece based on the current player's color or the opponent's color.
+     *
+     * @param forOpponent A boolean flag indicating whether to get the opponent's King.
+     *                    If true, the method returns the opponent's King.
+     *                    If false, the method returns the current player's King.
+     * @return The King piece of the specified color, or null if no King is found.
+     */
+    private ChessPiece getKing(boolean forOpponent) {
+        int opponentColor = currentColor == WHITE ? BLACK : WHITE;
+        int kingColor = forOpponent ? opponentColor : currentColor;
+
+        for (ChessPiece piece : simPieces) {
+            if (piece instanceof King && piece.getColor() == kingColor)
+                return piece;
+        }
+        return null;
     }
 
     /**
@@ -311,15 +371,23 @@ public class GamePanel extends JPanel implements Runnable {
         /*Promoting Pawn Status Message and Pieces Option*/
         if (promotePawn) {
             g2d.drawString("~Promote Pawn~", 840, 150);
-            for (ChessPiece piece : promotionPieces) {
+            for (ChessPiece piece : promotionPieces)
                 g2d.drawImage(piece.getImage(), piece.calcX(piece.getCol()), piece.calcY(piece.getRow()),
                         SQUARE_SIZE, SQUARE_SIZE, null);
-            }
         } else {
-            if ((currentColor == WHITE))
+            if ((currentColor == WHITE)) {
                 g2d.drawString(">> White's Turn", 840, 550);
-            else
+                if (checkPiece != null && checkPiece.getColor() == BLACK) {
+                    g2d.setColor(Color.YELLOW);
+                    g2d.drawString("Check!", 840, 600);
+                }
+            } else {
                 g2d.drawString(">> Black's Turn", 840, 250);
+                if (checkPiece != null && checkPiece.getColor() == WHITE) {
+                    g2d.setColor(Color.YELLOW);
+                    g2d.drawString("Check!", 840, 300);
+                }
+            }
         }
     }
 
