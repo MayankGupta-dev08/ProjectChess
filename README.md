@@ -1,5 +1,9 @@
 # Project Chess
 
+<p align="center">
+  <img src="img.png" width="100%" height="40%">
+</p>
+
 ## Description
 
 This project is a simple chess game made using vanilla Java. It can be played on a computer. It has a UI which allows users to interact with the game using mouse events. The game includes a fully functional chessboard and pieces, with the ability to move pieces according to the rules of chess.
