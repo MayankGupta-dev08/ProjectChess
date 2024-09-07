@@ -37,6 +37,8 @@ This project is a simple chess game made using vanilla Java. It can be played on
     mvn exec:java -Dexec.mainClass="dev.mayank.app.ChessApp"
     ```
 
+[//]: # (jpackage --input target/ --name ProjectChess --main-jar ProjectChess-v1.0.0-jar-with-dependencies.jar --main-class dev.mayank.app.ChessApp --type exe)
+
 <p align="center">
   <img src="img_2.png" width="80%" height="80%">
 </p>
